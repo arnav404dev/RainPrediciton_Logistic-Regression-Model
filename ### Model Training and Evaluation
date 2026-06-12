@@ -1,0 +1,44 @@
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+import joblib
+# Select the columns to be used for training/prediction
+X_train = train_inputs[numeric_cols + encoded_cols]
+X_val = val_inputs[numeric_cols + encoded_cols]
+X_test = test_inputs[numeric_cols + encoded_cols]
+
+# Create and train the model
+model = LogisticRegression(solver='liblinear')
+model.fit(X_train, train_targets)
+
+# Generate predictions and probabilities
+train_preds = model.predict(X_train)
+train_probs = model.predict_proba(X_train)
+accuracy_score(train_targets, train_preds)
+
+# Helper function to predict, compute accuracy & plot confustion matrix
+def predict_and_plot(inputs, targets, name=''):
+    preds = model.predict(inputs)
+    accuracy = accuracy_score(targets, preds)
+    print("Accuracy: {:.2f}%".format(accuracy * 100))
+    cf = confusion_matrix(targets, preds, normalize='true')
+    plt.figure()
+    sns.heatmap(cf, annot=True)
+    plt.xlabel('Prediction')
+    plt.ylabel('Target')
+    plt.title('{} Confusion Matrix'.format(name));    
+    return preds
+
+# Evaluate on validation and test set
+val_preds = predict_and_plot(X_val, val_targets, 'Validation')
+test_preds = predict_and_plot(X_test, test_targets, 'Test')
+
+# Save the trained model & load it back
+aussie_rain = {'model': model, 'imputer': imputer, 'scaler': scaler, 'encoder': encoder,
+               'input_cols': input_cols, 'target_col': target_col, 'numeric_cols': numeric_cols,
+               'categorical_cols': categorical_cols, 'encoded_cols': encoded_cols}
+joblib.dump(aussie_rain, 'aussie_rain.joblib')
+aussie_rain2 = joblib.load('aussie_rain.joblib')
